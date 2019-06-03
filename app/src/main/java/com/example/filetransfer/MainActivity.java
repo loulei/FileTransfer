@@ -16,6 +16,7 @@ import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -27,6 +28,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements PeerListListener,
     private boolean isWifiP2pEnabled = false;
 
     private ListView lv_devices;
+    private Button btn_pickfile;
 
     private List<WifiP2pDevice> devices;
     private WifiPeerListAdapter adapter;
@@ -57,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements PeerListListener,
         setContentView(R.layout.activity_main);
         devices = new ArrayList<>();
         lv_devices = (ListView) findViewById(R.id.lv_devices);
+        btn_pickfile = findViewById(R.id.btn_pickfile);
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -118,6 +122,19 @@ public class MainActivity extends AppCompatActivity implements PeerListListener,
                 return true;
             }
         });
+
+        btn_pickfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+                startActivityForResult(intent, FilePickerActivity.REQUEST_CODE_FILE_PICK);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {

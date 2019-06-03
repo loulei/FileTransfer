@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/ll_path"
+        android:layout_width="match_parent"
+        android:layout_height="45dp">
+
+        <TextView
+            android:id="@+id/tv_path"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:layout_marginLeft="10dp"
+            android:layout_centerVertical="true"
+            android:singleLine="true"
+            android:textSize="14sp"
+            android:text="/Sdcard"/>
+        
+        <TextView
+            android:id="@+id/tv_back"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/lfile_back_bg"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:clickable="true"
+            android:layout_alignParentRight="true"
+            android:text="上一级"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:textSize="14sp"
+            android:drawableLeft="@mipmap/lfile_up"/>
+
+    </RelativeLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_file"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+</LinearLayout>

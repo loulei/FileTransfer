@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +15,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.widget.Toast;
 
 public class FileTransferService extends IntentService {
@@ -28,23 +30,40 @@ public class FileTransferService extends IntentService {
 	private static final int FLAG_ERROR = -1;
 	private static final int FLAG_SEND_SUCCESS = 1;
 	private static final int FLAG_RECV_SUCCESS = 2;
-	
-	private Handler handler = new Handler(){
-		public void handleMessage(android.os.Message msg) {
-			switch (msg.what) {
-			case FLAG_ERROR:
-				Toast.makeText(getApplicationContext(), "error", Toast.LENGTH_SHORT).show();
-				break;
-			case FLAG_SEND_SUCCESS:
-				Toast.makeText(getApplicationContext(), "send finish", Toast.LENGTH_SHORT).show();
-				break;
-			case FLAG_RECV_SUCCESS:
-				Toast.makeText(getApplicationContext(), "recv finish", Toast.LENGTH_SHORT).show();
-				break;
-			}
-		};
-	};
+	private static final int FLAG_READY_TO_SERVER = 3;
 
+    private MyHandler handler = new MyHandler(this);
+
+	private static class MyHandler extends  Handler{
+	    private WeakReference<FileTransferService> fileTransferService;
+
+        public MyHandler(FileTransferService service) {
+            fileTransferService = new WeakReference<>(service);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            FileTransferService service = fileTransferService.get();
+            if (service != null) {
+                switch (msg.what) {
+                    case FLAG_ERROR:
+                        Toast.makeText(service.getApplicationContext(), "error", Toast.LENGTH_SHORT).show();
+                        break;
+                    case FLAG_SEND_SUCCESS:
+                        Toast.makeText(service.getApplicationContext(), "send finish", Toast.LENGTH_SHORT).show();
+                        break;
+                    case FLAG_RECV_SUCCESS:
+                        Toast.makeText(service.getApplicationContext(), "recv finish", Toast.LENGTH_SHORT).show();
+                        break;
+                    case FLAG_READY_TO_SERVER:
+                        Toast.makeText(service.getApplicationContext(), "server ready", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+
+        }
+    }
+	
 	public FileTransferService(String name) {
 		super(name);
 		// TODO Auto-generated constructor stub
@@ -54,7 +73,7 @@ public class FileTransferService extends IntentService {
 		super("FileTransferService");
 	}
 
-	@Override
+    @Override
 	protected void onHandleIntent(Intent intent) {
 		// TODO Auto-generated method stub
 		if (ACTION_SEND_FILE.equals(intent.getAction())) {
@@ -64,7 +83,6 @@ public class FileTransferService extends IntentService {
 			Socket socket = new Socket();
 			try {
 				socket.bind(null);
-				
 				socket.connect(new InetSocketAddress(host, port));
 				
 				OutputStream os = socket.getOutputStream();
@@ -97,6 +115,7 @@ public class FileTransferService extends IntentService {
 			int port = intent.getExtras().getInt(EXTRA_GROUP_OWNER_PORT);
 			try {
 				ServerSocket serverSocket = new ServerSocket(port);
+				handler.sendEmptyMessage(FLAG_READY_TO_SERVER);
 				Socket socket = serverSocket.accept();
 				socket.setSoTimeout(SOCKET_TIMEOUT);
 				File saveFile = new File(Environment.getExternalStorageDirectory().getPath(), "save.txt");
