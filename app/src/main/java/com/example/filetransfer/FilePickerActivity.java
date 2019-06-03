@@ -80,6 +80,8 @@ public class FilePickerActivity extends AppCompatActivity {
                     tv_path.setText(path);
                     files = getFileList(path);
                     fileAdapter.setData(files);
+                } else {
+                    System.out.println(file.getAbsolutePath());
                 }
             }
         });
@@ -128,14 +130,10 @@ public class FilePickerActivity extends AppCompatActivity {
                 // Show files below directories
                 return 1;
             }
-            if (f1.isFile() && f2.isFile()) {
+            if (f1.getName().equals(f2.getName())) {
                 return 0;
             }
-            if (f1.isDirectory() && f2.isDirectory()) {
-                return 0;
-            }
-            // Sort the directories alphabetically
-            return f1.getName().compareToIgnoreCase(f2.getName());
+            return f1.getName().compareTo(f2.getName());
         }
     }
 
