@@ -1,6 +1,7 @@
 package com.example.filetransfer;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -18,6 +19,8 @@ import android.widget.Toast;
 import org.w3c.dom.Text;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,6 +30,7 @@ import java.util.List;
 public class FilePickerActivity extends AppCompatActivity {
 
     public static final int REQUEST_CODE_FILE_PICK = 1000;
+    public static final String KEY_FILE_PATH = "file_path";
 
     private TextView tv_path;
     private RecyclerView rv_file;
@@ -81,7 +85,10 @@ public class FilePickerActivity extends AppCompatActivity {
                     files = getFileList(path);
                     fileAdapter.setData(files);
                 } else {
-                    System.out.println(file.getAbsolutePath());
+                    Intent intent = new Intent();
+                    intent.putExtra(KEY_FILE_PATH, file.getAbsolutePath());
+                    setResult(RESULT_OK, intent);
+                    finish();
                 }
             }
         });

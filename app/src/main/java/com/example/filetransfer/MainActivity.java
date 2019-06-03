@@ -33,6 +33,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,7 +137,28 @@ public class MainActivity extends AppCompatActivity implements PeerListListener,
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == FilePickerActivity.REQUEST_CODE_FILE_PICK && resultCode == RESULT_OK) {
+            String filePath = data.getStringExtra(FilePickerActivity.KEY_FILE_PATH);
+            System.out.println(filePath);
+
+            try {
+                FileInputStream fis = new FileInputStream(filePath);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                int len = 0;
+                byte[] buffer = new byte[1024];
+                while ((len = fis.read(buffer)) != -1) {
+                    bos.write(buffer, 0, len);
+                }
+                bos.flush();
+                bos.close();
+                fis.close();
+
+                System.out.println(bos.toByteArray().length);
+
+            } catch (java.io.IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
