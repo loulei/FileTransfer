@@ -21,6 +21,7 @@ import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
@@ -39,7 +40,6 @@ public class FileTransferService extends IntentService {
 	private static final int FLAG_READY_TO_SERVER = 3;
 	private static final int FLAG_TRANSFER_PROGRESS = 4;
 	private static final int FLAG_SHOW_NOTIFICATION = 5;
-	private static final int FLAG_CANCEL_NOTIFICATION = 6;
 
 
     private Handler handler = new Handler(){
@@ -62,6 +62,7 @@ public class FileTransferService extends IntentService {
                     break;
                 case FLAG_TRANSFER_PROGRESS:
                     int progress = msg.arg1;
+					System.out.println(progress);
                     builder.setContentTitle("Transfering...")
                             .setProgress(100, progress, false)
                             .setWhen(System.currentTimeMillis());
@@ -72,7 +73,6 @@ public class FileTransferService extends IntentService {
 				case FLAG_SHOW_NOTIFICATION:
 					setNotification();
 					break;
-
             }
         }
     };
@@ -106,22 +106,26 @@ public class FileTransferService extends IntentService {
 				os.flush();
 				FileInputStream fis = new FileInputStream(file);
 				int len = 0;
-				byte[] buffer = new byte[1024];
+				byte[] buffer = new byte[1024*4];
 				long writeLen = 0;
 				int progress = 0;
+				long currentTime = System.currentTimeMillis();
 				while ((len = fis.read(buffer)) != -1) {
 					os.write(buffer, 0, len);
 					writeLen += len;
 					int tempProgress = (int) (writeLen * 100 / file.length());
-					if (progress != tempProgress) {
+					long tempTime = System.currentTimeMillis();
+					if (progress != tempProgress && (tempTime - currentTime) > 1000) {
 						handler.sendMessage(handler.obtainMessage(FLAG_TRANSFER_PROGRESS, tempProgress, 0));
 						progress = tempProgress;
+						currentTime = tempTime;
 					}
 				}
 				os.flush();
 				os.close();
 				fis.close();
 				handler.sendEmptyMessage(FLAG_SEND_SUCCESS);
+				SystemClock.sleep(3000);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -164,14 +168,17 @@ public class FileTransferService extends IntentService {
 				int len = 0;
 				long readLen = 0;
 				int progress = 0;
-				byte[] buffer = new byte[1024*10];
+				byte[] buffer = new byte[1024*4];
+				long currentTime = System.currentTimeMillis();
 				while ((len = is.read(buffer)) != -1) {
 					fos.write(buffer, 0, len);
 					readLen += len;
 					int tempProgress = (int) (readLen * 100 / fileLen);
-                    if (progress != tempProgress) {
+					long tempTime = System.currentTimeMillis();
+                    if (progress != tempProgress && (tempTime - currentTime) > 1000) {
                         handler.sendMessage(handler.obtainMessage(FLAG_TRANSFER_PROGRESS, tempProgress, 0));
 						progress = tempProgress;
+						currentTime = tempTime;
                     }
 				}
 				System.out.println("readlen="+readLen);
@@ -181,6 +188,8 @@ public class FileTransferService extends IntentService {
 				socket.close();
 				serverSocket.close();
 				handler.sendEmptyMessage(FLAG_RECV_SUCCESS);
+				SystemClock.sleep(3000);
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -211,12 +220,12 @@ public class FileTransferService extends IntentService {
 
     private void complete() {
         if (builder != null) {
-            builder.setContentTitle("Transfer Complete");
+            builder.setContentTitle("Transfer Complete")
+			.setProgress(100, 100, false);
             Notification notification = builder.build();
             notification.flags = Notification.FLAG_AUTO_CANCEL;
             notificationManager.notify(NOTIFY_ID, notification);
         }
-        stopSelf();
     }
 
 }
