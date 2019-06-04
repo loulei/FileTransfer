@@ -88,7 +88,6 @@ public class FileTransferService extends IntentService {
 				OutputStream os = socket.getOutputStream();
 				os.write(Utils.intToByteArray(file.getName().length()));
 				os.write(file.getName().getBytes("UTF-8"));
-				os.write(Utils.intToByteArray((int) file.length()));
 				FileInputStream fis = new FileInputStream(file);
 				int len = 0;
 				byte[] buffer = new byte[1024];
@@ -120,7 +119,6 @@ public class FileTransferService extends IntentService {
 				ServerSocket serverSocket = new ServerSocket(port);
 				handler.sendEmptyMessage(FLAG_READY_TO_SERVER);
 				Socket socket = serverSocket.accept();
-				socket.setSoTimeout(SOCKET_TIMEOUT);
 
 				InputStream is = socket.getInputStream();
 
@@ -130,18 +128,21 @@ public class FileTransferService extends IntentService {
 				byte[] nameBytes = new byte[nameLen];
 				is.read(nameBytes);
 				String filename = new String(nameBytes, "UTF-8");
-				is.read(u4);
-				int fileLen = Utils.byteArrayToInt(u4);
-				byte[] fileContent = new byte[fileLen];
-				is.read(fileContent);
-
 				File saveFile = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "FileTransferDownload", filename);
 				System.out.println("save to file :" + saveFile.getPath());
 				if (!saveFile.getParentFile().exists()) {
 					saveFile.getParentFile().mkdir();
 				}
 				FileOutputStream fos = new FileOutputStream(saveFile);
-				fos.write(fileContent);
+				int len = 0;
+				int readLen = 0;
+				byte[] buffer = new byte[1024*10];
+				while ((len = is.read(buffer)) != -1) {
+					fos.write(buffer, 0, len);
+					readLen += len;
+				}
+				System.out.println("readlen="+readLen);
+				fos.flush();
 				fos.close();
 				is.close();
 				socket.close();
