@@ -84,9 +84,12 @@ public class FileTransferService extends IntentService {
 			try {
 				socket.bind(null);
 				socket.connect(new InetSocketAddress(host, port));
-				
+				File file = new File(filePath);
 				OutputStream os = socket.getOutputStream();
-				FileInputStream fis = new FileInputStream(filePath);
+				os.write(Utils.intToByteArray(file.getName().length()));
+				os.write(file.getName().getBytes("UTF-8"));
+				os.write(Utils.intToByteArray((int) file.length()));
+				FileInputStream fis = new FileInputStream(file);
 				int len = 0;
 				byte[] buffer = new byte[1024];
 				while ((len = fis.read(buffer)) != -1) {
@@ -118,16 +121,27 @@ public class FileTransferService extends IntentService {
 				handler.sendEmptyMessage(FLAG_READY_TO_SERVER);
 				Socket socket = serverSocket.accept();
 				socket.setSoTimeout(SOCKET_TIMEOUT);
-				File saveFile = new File(Environment.getExternalStorageDirectory().getPath(), "save.txt");
-				InputStream is = socket.getInputStream();
-				FileOutputStream fos = new FileOutputStream(saveFile, true);
 
-				int len = 0;
-				byte[] buffer = new byte[1024];
-				while ((len = is.read(buffer)) != -1) {
-					fos.write(buffer, 0, len);
+				InputStream is = socket.getInputStream();
+
+				byte[] u4 = new byte[4];
+				is.read(u4);
+				int nameLen = Utils.byteArrayToInt(u4);
+				byte[] nameBytes = new byte[nameLen];
+				is.read(nameBytes);
+				String filename = new String(nameBytes, "UTF-8");
+				is.read(u4);
+				int fileLen = Utils.byteArrayToInt(u4);
+				byte[] fileContent = new byte[fileLen];
+				is.read(fileContent);
+
+				File saveFile = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "FileTransferDownload", filename);
+				System.out.println("save to file :" + saveFile.getPath());
+				if (!saveFile.getParentFile().exists()) {
+					saveFile.getParentFile().mkdir();
 				}
-				fos.flush();
+				FileOutputStream fos = new FileOutputStream(saveFile);
+				fos.write(fileContent);
 				fos.close();
 				is.close();
 				socket.close();

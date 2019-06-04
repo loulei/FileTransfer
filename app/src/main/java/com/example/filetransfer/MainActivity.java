@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements PeerListListener,
                     System.out.println("not GroupOwner");
                     Intent intent = new Intent(MainActivity.this, FileTransferService.class);
                     intent.setAction(FileTransferService.ACTION_SEND_FILE);
-                    intent.putExtra(FileTransferService.EXTRA_FILE_PATH, "/sdcard/jni.h");
+                    intent.putExtra(FileTransferService.EXTRA_FILE_PATH, btn_pickfile.getText().toString());
                     intent.putExtra(FileTransferService.EXTRA_GROUP_OWNER_ADDRESS, info.groupOwnerAddress.getHostAddress());
                     intent.putExtra(FileTransferService.EXTRA_GROUP_OWNER_PORT, 9900);
                     startService(intent);
@@ -141,23 +141,9 @@ public class MainActivity extends AppCompatActivity implements PeerListListener,
             String filePath = data.getStringExtra(FilePickerActivity.KEY_FILE_PATH);
             System.out.println(filePath);
 
-            try {
-                FileInputStream fis = new FileInputStream(filePath);
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                int len = 0;
-                byte[] buffer = new byte[1024];
-                while ((len = fis.read(buffer)) != -1) {
-                    bos.write(buffer, 0, len);
-                }
-                bos.flush();
-                bos.close();
-                fis.close();
+            btn_pickfile.setText(filePath);
 
-                System.out.println(bos.toByteArray().length);
 
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
